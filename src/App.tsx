@@ -83,17 +83,31 @@ function App() {
 								cameraPositionRef.current[1],
 						];
 
-						const newCameraPosition: [number, number] = [
-							(cameraPositionRef.current[0] - positionCanvas[0]) *
-								Math.E ** newZoom +
-								positionCanvas[0],
-							(cameraPositionRef.current[1] - positionCanvas[1]) *
-								Math.E ** newZoom +
-								positionCanvas[1],
+						const mousePositionCentered = [
+							mousePositionRef.current[0] - rect.width / 2,
+							-(mousePositionRef.current[1] - rect.height / 2),
 						];
 
-						// cameraPositionRef.current = newCameraPosition;
-						console.log(newCameraPosition);
+						const newMousePosition = [
+							mousePositionCentered[0] * Math.E ** (newZoom - zoomRef.current),
+							mousePositionCentered[1] * Math.E ** (newZoom - zoomRef.current),
+						];
+
+						const displacement = [
+							newMousePosition[0] - mousePositionCentered[0],
+							newMousePosition[1] - mousePositionCentered[1],
+						];
+
+						console.log(displacement);
+
+						const newCameraPosition: [number, number] = [
+							cameraPositionRef.current[0] +
+								displacement[0] / Math.E ** newZoom,
+							cameraPositionRef.current[1] +
+								displacement[1] / Math.E ** newZoom,
+						];
+
+						cameraPositionRef.current = newCameraPosition;
 						zoomRef.current = newZoom;
 					}
 				}}
@@ -144,8 +158,10 @@ function App() {
 						// 	],
 						// });
 						cameraPositionRef.current = [
-							cameraPosition[0] - e.movementX / Math.E ** zoomRef.current,
-							cameraPosition[1] + e.movementY / Math.E ** zoomRef.current,
+							cameraPositionRef.current[0] -
+								e.movementX / Math.E ** zoomRef.current,
+							cameraPositionRef.current[1] +
+								e.movementY / Math.E ** zoomRef.current,
 						];
 					}
 				}}

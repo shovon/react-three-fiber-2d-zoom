@@ -74,39 +74,27 @@ function App() {
 
 						const newZoom = zoomRef.current - e.deltaY * 0.001;
 
-						const relativeMousePosition: [number, number] = hadamardVec2(
-							addVec2(
-								scalarMulVec2(
-									1 / Math.E ** zoomRef.current,
-									subVec2(
-										mousePositionRef.current,
-										scalarMulVec2(1 / 2, [rect.width, rect.height])
-									)
-								),
-								cameraPositionRef.current
-							),
-							[1, 1]
-						);
+						const positionCanvas: [number, number] = [
+							(mousePositionRef.current[0] - rect.width / 2) /
+								Math.E ** zoomRef.current +
+								cameraPositionRef.current[0],
+							-(mousePositionRef.current[1] - rect.height / 2) /
+								Math.E ** zoomRef.current +
+								cameraPositionRef.current[1],
+						];
 
-						const newPosition = addVec2(
-							scalarMulVec2(
-								1 / Math.E ** newZoom,
-								subVec2(cameraPositionRef.current, relativeMousePosition)
-							),
-							relativeMousePosition
-						);
+						const newCameraPosition: [number, number] = [
+							(cameraPositionRef.current[0] - positionCanvas[0]) *
+								Math.E ** newZoom +
+								positionCanvas[0],
+							(cameraPositionRef.current[1] - positionCanvas[1]) *
+								Math.E ** newZoom +
+								positionCanvas[1],
+						];
 
-						console.log(Math.E ** newZoom, newPosition, relativeMousePosition);
-
+						// cameraPositionRef.current = newCameraPosition;
+						console.log(newCameraPosition);
 						zoomRef.current = newZoom;
-						cameraPositionRef.current = [...newPosition];
-
-						// updateCamera({
-						// 	zoom: newZoom,
-						// 	// cameraPosition: cameraPosition,
-						// 	cameraPosition: relativeMousePosition,
-						// 	// cameraPosition: [newPosition[0], newPosition[1]],
-						// });
 					}
 				}}
 				onMouseDown={() => {
@@ -124,21 +112,28 @@ function App() {
 						mousePositionRef.current[0] = e.clientX - rect.left;
 						mousePositionRef.current[1] = e.clientY - rect.top;
 
-						const relativeMousePosition: [number, number] = hadamardVec2(
-							addVec2(
-								scalarMulVec2(
-									1 / Math.E ** zoomRef.current,
-									subVec2(
-										mousePositionRef.current,
-										scalarMulVec2(1 / 2, [rect.width, rect.height])
-									)
-								),
-								cameraPositionRef.current
-							),
-							[1, -1]
-						);
+						// const positionCanvas: [number, number] = [
+						// 	(mousePositionRef.current[0] - rect.width / 2) /
+						// 		Math.E ** zoomRef.current -
+						// 		cameraPositionRef.current[0],
+						// 	-(mousePositionRef.current[1] - rect.height / 2) /
+						// 		Math.E ** zoomRef.current -
+						// 		cameraPositionRef.current[1],
+						// ];
 
-						console.log(cameraPositionRef.current, relativeMousePosition);
+						const positionCanvas: [number, number] = [
+							(mousePositionRef.current[0] - rect.width / 2) /
+								Math.E ** zoomRef.current +
+								cameraPositionRef.current[0],
+							-(mousePositionRef.current[1] - rect.height / 2) /
+								Math.E ** zoomRef.current +
+								cameraPositionRef.current[1],
+						];
+
+						// relativeMousePosition[0] = cameraPosition[0];
+						// relativeMousePosition[1] = cameraPosition[1];
+
+						console.log(cameraPositionRef.current, positionCanvas);
 					}
 
 					if (isMouseDown) {

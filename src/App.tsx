@@ -107,15 +107,6 @@ function App() {
 						mousePositionRef.current[0] = e.clientX - rect.left;
 						mousePositionRef.current[1] = e.clientY - rect.top;
 
-						// const positionCanvas: [number, number] = [
-						// 	(mousePositionRef.current[0] - rect.width / 2) /
-						// 		Math.E ** zoomRef.current -
-						// 		cameraPositionRef.current[0],
-						// 	-(mousePositionRef.current[1] - rect.height / 2) /
-						// 		Math.E ** zoomRef.current -
-						// 		cameraPositionRef.current[1],
-						// ];
-
 						const positionCanvas: [number, number] = [
 							(mousePositionRef.current[0] - rect.width / 2) /
 								Math.E ** zoomRef.current +
@@ -124,20 +115,9 @@ function App() {
 								Math.E ** zoomRef.current +
 								cameraPositionRef.current[1],
 						];
-
-						// relativeMousePosition[0] = cameraPosition[0];
-						// relativeMousePosition[1] = cameraPosition[1];
-
-						console.log(cameraPositionRef.current, positionCanvas);
 					}
 
 					if (isMouseDown) {
-						// updateCamera({
-						// 	cameraPosition: [
-						// 		cameraPosition[0] - e.movementX / Math.E ** zoomRef.current,
-						// 		cameraPosition[1] + e.movementY / Math.E ** zoomRef.current,
-						// 	],
-						// });
 						cameraPositionRef.current = [
 							cameraPositionRef.current[0] -
 								e.movementX / Math.E ** zoomRef.current,
@@ -152,7 +132,6 @@ function App() {
 					<sphereBufferGeometry args={[1, 30, 30]} />
 				</mesh>
 				<gridHelper rotation={[Math.PI / 2, 0, 0]} />
-				{/* <PerspectiveCamera makeDefault position={cameraPosition} /> */}
 				<OrthographicCamera
 					makeDefault
 					position={[...cameraPosition, 10]}

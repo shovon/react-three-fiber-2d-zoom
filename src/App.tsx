@@ -4,25 +4,6 @@ import "./App.css";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrthographicCamera, PerspectiveCamera } from "@react-three/drei";
 
-function addVec2(a: [number, number], b: [number, number]): [number, number] {
-	return [a[0] + b[0], a[1] + b[1]];
-}
-
-function scalarMulVec2(c: number, b: [number, number]): [number, number] {
-	return [c * b[0], c * b[1]];
-}
-
-function subVec2(a: [number, number], b: [number, number]): [number, number] {
-	return addVec2(a, scalarMulVec2(-1, b));
-}
-
-function hadamardVec2(
-	a: [number, number],
-	b: [number, number]
-): [number, number] {
-	return [a[0] * b[0], a[1] * b[1]];
-}
-
 function App() {
 	const [isMouseDown, setIsMouseDown] = useState(false);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);

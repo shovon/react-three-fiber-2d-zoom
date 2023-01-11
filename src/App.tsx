@@ -53,6 +53,18 @@ function App() {
 	);
 	const [isClickingObject, setIsClickingObject] = useState(false);
 
+	type Circle = {
+		position: [number, number];
+		active: boolean;
+	};
+
+	const circles = [
+		{
+			position: [0, 0] satisfies [number, number],
+			active: false,
+		},
+	] satisfies Circle[];
+
 	useEffect(() => {
 		function run() {
 			return requestAnimationFrame(() => {
@@ -163,6 +175,25 @@ function App() {
 					<meshBasicMaterial color={"red"} />
 					<sphereBufferGeometry args={[0.5, 30, 30]} />
 				</mesh>
+				{circles.map(({ position, active }, index) => {
+					function updateCircle() {}
+
+					return (
+						<mesh
+							key={index}
+							onPointerDown={() => {
+								setIsClickingObject(true);
+							}}
+							onPointerUp={() => {
+								setIsClickingObject(false);
+							}}
+							position={[...position, 0]}
+						>
+							<meshBasicMaterial color={active ? "green" : "red"} />
+							<sphereBufferGeometry args={[0.5, 30, 30]} />
+						</mesh>
+					);
+				})}
 				<gridHelper rotation={[Math.PI / 2, 0, 0]} />
 				<OrthographicCamera
 					makeDefault

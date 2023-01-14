@@ -1,35 +1,13 @@
 import { useRef, useState, useReducer, useEffect } from "react";
 import "./App.css";
-import { Canvas } from "@react-three/fiber";
+import { act, Canvas } from "@react-three/fiber";
 import { OrthographicCamera } from "@react-three/drei";
-
-function scalarMul<V extends number[]>(constant: number, vector: V): V {
-	return vector.map((v) => v * constant) as V;
-}
 
 function vector2DAdd(
 	a: [number, number],
 	b: [number, number]
 ): [number, number] {
 	return [a[0] + b[0], a[1] + b[1]];
-}
-
-function vector2DSub(
-	a: [number, number],
-	b: [number, number]
-): [number, number] {
-	return vector2DAdd(a, scalarMul(-1, b));
-}
-
-function hadamard2D(
-	a: [number, number],
-	b: [number, number]
-): [number, number] {
-	return [a[0] * b[0], a[1] * b[1]];
-}
-
-function invertY(v: [number, number]): [number, number] {
-	return hadamard2D(v, [1, -1]);
 }
 
 function App() {
@@ -51,19 +29,26 @@ function App() {
 		}),
 		{ zoom: zoomRef.current, cameraPosition: cameraPositionRef.current }
 	);
-	const [isClickingObject, setIsClickingObject] = useState(false);
+	const mouseDidDragRef = useRef(false);
+	const objectMouseDownRef = useRef(false);
+
+	type CircleState = "INACTIVE" | "JUST_ACTIVE" | "ACTIVE" | "MOVED";
 
 	type Circle = {
 		position: [number, number];
-		active: boolean;
+		active: CircleState;
 	};
 
-	const circles = [
+	const [circles, setCircles] = useState<Circle[]>([
 		{
 			position: [0, 0] satisfies [number, number],
-			active: false,
+			active: "INACTIVE",
 		},
-	] satisfies Circle[];
+		{
+			position: [-1, 1] satisfies [number, number],
+			active: "INACTIVE",
+		},
+	]);
 
 	useEffect(() => {
 		function run() {
@@ -86,10 +71,23 @@ function App() {
 		};
 	}, []);
 
+	// Rules:
+	//
+	// - user mouse downs on entity; entity is selected
+	// - user mouse ups an entity
+	//   a) if the mouse did not move
+	//     a) if the entity was previously selected, deselect it
+	//     b) if the entity was not previously selected, do nothing
+	//   b) otherwise, do nothing
+	// - user mouse downs on empty space; all entities are deselected
+
 	return (
 		<div className="App">
 			<Canvas
 				ref={canvasRef}
+				onPointerMissed={() => {
+					setCircles(circles.map((c) => ({ ...c, active: "INACTIVE" })));
+				}}
 				onWheel={(e) => {
 					if (canvasRef.current) {
 						const rect = canvasRef.current.getBoundingClientRect();
@@ -122,7 +120,15 @@ function App() {
 						zoomRef.current = newZoom;
 					}
 				}}
-				onMouseDown={() => {
+				onPointerDown={(e) => {
+					e.stopPropagation();
+					(e.target as any).setPointerCapture(e.pointerId);
+				}}
+				onPointerUp={() => {
+					mouseDidDragRef.current = false;
+					objectMouseDownRef.current = false;
+				}}
+				onMouseDown={(e) => {
 					setIsMouseDown(true);
 				}}
 				onMouseUp={() => {
@@ -153,43 +159,74 @@ function App() {
 						);
 					}
 
-					if (isMouseDown && !isClickingObject) {
-						cameraPositionRef.current = [
-							cameraPositionRef.current[0] -
-								e.movementX / Math.E ** zoomRef.current,
-							cameraPositionRef.current[1] +
-								e.movementY / Math.E ** zoomRef.current,
-						];
+					if (isMouseDown) {
+						if (!objectMouseDownRef.current) {
+							cameraPositionRef.current = [
+								cameraPositionRef.current[0] -
+									e.movementX / Math.E ** zoomRef.current,
+								cameraPositionRef.current[1] +
+									e.movementY / Math.E ** zoomRef.current,
+							];
+						} else {
+							setCircles(
+								circles.map((circle) => ({
+									...circle,
+									position: [
+										circle.position[0] +
+											e.movementX / Math.E ** zoomRef.current,
+										circle.position[1] -
+											e.movementY / Math.E ** zoomRef.current,
+									],
+								}))
+							);
+						}
+
+						mouseDidDragRef.current = true;
 					}
 				}}
 			>
-				<mesh
-					onPointerDown={() => {
-						setIsClickingObject(true);
-					}}
-					onPointerUp={() => {
-						setIsClickingObject(false);
-					}}
-					position={[0, 0, 0]}
-				>
-					<meshBasicMaterial color={"red"} />
-					<sphereBufferGeometry args={[0.5, 30, 30]} />
-				</mesh>
 				{circles.map(({ position, active }, index) => {
-					function updateCircle() {}
+					function updateCircle(active: CircleState) {
+						setCircles(
+							circles.map((circle, i) =>
+								i === index ? { ...circle, active } : circle
+							)
+						);
+					}
 
 					return (
 						<mesh
 							key={index}
 							onPointerDown={() => {
-								setIsClickingObject(true);
+								switch (active) {
+									case "INACTIVE":
+										updateCircle("JUST_ACTIVE");
+										break;
+								}
+								objectMouseDownRef.current = true;
 							}}
 							onPointerUp={() => {
-								setIsClickingObject(false);
+								switch (active) {
+									case "ACTIVE":
+										if (!mouseDidDragRef.current) {
+											updateCircle("INACTIVE");
+										}
+										break;
+									case "JUST_ACTIVE":
+										updateCircle("ACTIVE");
+								}
 							}}
 							position={[...position, 0]}
 						>
-							<meshBasicMaterial color={active ? "green" : "red"} />
+							<meshBasicMaterial
+								color={
+									active === "ACTIVE" ||
+									active === "MOVED" ||
+									active === "JUST_ACTIVE"
+										? "green"
+										: "red"
+								}
+							/>
 							<sphereBufferGeometry args={[0.5, 30, 30]} />
 						</mesh>
 					);
